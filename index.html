@@ -2,965 +2,573 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ollama's Adventure - Famille Hazan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ollama Mobile</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-family: Arial, sans-serif;
             overflow: hidden;
-            background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%);
+            background: linear-gradient(to bottom, #87CEEB, #98D8E8);
             height: 100vh;
             position: relative;
+            touch-action: none;
         }
 
         #gameCanvas {
             width: 100%;
-            height: 100vh;
+            height: 100%;
             position: relative;
             overflow: hidden;
-        }
-
-        /* Parallax Background Layers */
-        .parallax-layer {
-            position: absolute;
-            width: 200%;
-            height: 100%;
-            bottom: 0;
-            background-repeat: repeat-x;
-            animation: none;
-        }
-
-        .layer-sky {
             background: linear-gradient(to bottom, #87CEEB, #98D8E8);
-            z-index: 1;
         }
 
-        .layer-mountains {
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300"><polygon points="0,300 200,100 400,250 600,50 800,150 1000,200 1200,80 1200,300" fill="%238B7355"/></svg>');
-            background-size: 50% 100%;
-            bottom: 150px;
-            z-index: 2;
-            opacity: 0.8;
-        }
-
-        .layer-hills {
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 200"><ellipse cx="150" cy="150" rx="150" ry="50" fill="%2373C573"/><ellipse cx="450" cy="120" rx="200" ry="60" fill="%2366BB6A"/><ellipse cx="800" cy="140" rx="180" ry="55" fill="%2373C573"/><ellipse cx="1100" cy="110" rx="160" ry="50" fill="%2366BB6A"/></svg>');
-            background-size: 40% 100%;
-            bottom: 50px;
-            z-index: 3;
-        }
-
-        .layer-ground {
-            background: linear-gradient(to top, #8FBC8F 0%, #90EE90 100%);
-            height: 80px;
+        .ground {
+            position: absolute;
             bottom: 0;
+            width: 200%;
+            height: 60px;
+            background: linear-gradient(to top, #8FBC8F, #90EE90);
+            border-top: 2px solid #6B8E23;
             z-index: 4;
-            border-top: 3px solid #6B8E23;
         }
 
-        @keyframes scroll {
+        .moving {
+            animation: move 3s linear infinite;
+        }
+
+        @keyframes move {
             from { transform: translateX(0); }
             to { transform: translateX(-50%); }
         }
 
-        .scrolling {
-            animation: scroll linear infinite;
-        }
-
-        /* Floating name displays */
-        .floating-name {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 12px 18px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #2E7D32;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            border: 3px solid #4CAF50;
-            z-index: 15;
-            max-width: 200px;
-            text-align: center;
-            animation: fadeInOut 3s ease-in-out;
-            pointer-events: none;
-        }
-
-        .floating-name .full-name {
-            color: #1B5E20;
-            font-size: 16px;
-            margin-bottom: 4px;
-            font-weight: bold;
-        }
-
-        .floating-name .hebrew-name {
-            color: #388E3C;
-            font-size: 12px;
-            font-style: italic;
-            margin-bottom: 4px;
-        }
-
-        .floating-name .birth-info {
-            color: #FF6B6B;
-            font-size: 11px;
-            line-height: 1.3;
-        }
-
-        @keyframes fadeInOut {
-            0% {
-                opacity: 0;
-                transform: scale(0.8) translateY(20px);
-            }
-            20% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-            80% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(0.8) translateY(-20px);
-            }
-        }
-
-        /* Alpaca Character */
+        /* Alpaca */
         #ollama {
             position: absolute;
-            bottom: 80px;
-            left: 100px;
-            width: 80px;
-            height: 100px;
+            bottom: 60px;
+            left: 60px;
+            width: 50px;
+            height: 60px;
             z-index: 10;
-            transition: bottom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: bottom 0.3s ease-out;
         }
 
-        .alpaca-body {
-            background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%);
-            border-radius: 50% 50% 45% 45%;
-            width: 60px;
-            height: 70px;
-            position: relative;
-            border: 3px solid #8B7355;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .alpaca-head {
-            background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%);
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            position: absolute;
-            top: -25px;
-            left: 5px;
-            border: 3px solid #8B7355;
-        }
-
-        .alpaca-ear {
+        .ollama-body {
+            width: 40px;
+            height: 40px;
             background: #FFE4B5;
-            width: 15px;
-            height: 20px;
             border-radius: 50%;
-            position: absolute;
             border: 2px solid #8B7355;
+            position: relative;
+            margin: 0 auto;
         }
 
-        .alpaca-ear.left {
-            top: -35px;
-            left: 8px;
-            transform: rotate(-20deg);
-        }
-
-        .alpaca-ear.right {
-            top: -35px;
-            right: 8px;
-            transform: rotate(20deg);
-        }
-
-        .alpaca-eye {
-            background: #000;
-            width: 8px;
-            height: 10px;
+        .ollama-head {
+            width: 25px;
+            height: 25px;
+            background: #FFE4B5;
             border-radius: 50%;
+            border: 2px solid #8B7355;
             position: absolute;
-            top: 5px;
-            animation: blink 4s infinite;
-        }
-
-        .alpaca-eye.left {
-            left: 10px;
-        }
-
-        .alpaca-eye.right {
-            right: 10px;
-        }
-
-        @keyframes blink {
-            0%, 90%, 100% { height: 10px; }
-            95% { height: 2px; }
-        }
-
-        .alpaca-nose {
-            background: #FFB6C1;
-            width: 15px;
-            height: 10px;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 10px;
+            top: -15px;
             left: 50%;
             transform: translateX(-50%);
-            border: 2px solid #8B7355;
         }
 
-        .alpaca-legs {
+        .ollama-eye {
+            width: 3px;
+            height: 3px;
+            background: black;
+            border-radius: 50%;
             position: absolute;
-            bottom: -25px;
-            left: 10px;
-            width: 40px;
-            display: flex;
-            justify-content: space-between;
+            top: 8px;
         }
 
-        .leg {
-            background: #8B7355;
-            width: 8px;
-            height: 25px;
-            border-radius: 4px;
-            animation: run 0.5s infinite alternate;
-        }
+        .ollama-eye.left { left: 6px; }
+        .ollama-eye.right { right: 6px; }
 
-        @keyframes run {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-5px); }
-        }
-
-        .jumping #ollama {
-            animation: jump 0.8s ease-out;
+        .jumping {
+            animation: jump 0.6s ease-out !important;
         }
 
         @keyframes jump {
-            0% { bottom: 80px; }
-            50% { bottom: 250px; }
-            100% { bottom: 80px; }
+            0%, 100% { bottom: 60px; }
+            50% { bottom: 180px; }
         }
 
         /* Obstacles */
         .obstacle {
             position: absolute;
-            bottom: 80px;
+            bottom: 60px;
             right: -60px;
+            width: 30px;
+            height: 40px;
+            background: #228B22;
+            border-radius: 5px 5px 0 0;
+            border: 2px solid #006400;
             z-index: 9;
         }
 
-        .cactus {
-            width: 40px;
-            height: 60px;
-            background: linear-gradient(to top, #228B22, #32CD32);
-            border-radius: 10px 10px 0 0;
-            border: 3px solid #006400;
-            position: relative;
-        }
-
-        .cactus::before,
-        .cactus::after {
-            content: '';
+        /* Noms flottants */
+        .name-float {
             position: absolute;
-            background: inherit;
-            border: inherit;
-        }
-
-        .cactus::before {
-            width: 15px;
-            height: 25px;
+            background: white;
+            padding: 8px 12px;
             border-radius: 10px;
-            left: -15px;
-            top: 10px;
-        }
-
-        .cactus::after {
-            width: 15px;
-            height: 20px;
-            border-radius: 10px;
-            right: -15px;
-            top: 15px;
-        }
-
-        .rock {
-            width: 50px;
-            height: 40px;
-            background: radial-gradient(ellipse at center, #808080, #696969);
-            border-radius: 40% 60% 60% 40% / 60% 30% 70% 40%;
-            border: 2px solid #4A4A4A;
-        }
-
-        /* UI Elements */
-        #scoreBoard {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px 25px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 3px solid #FFD700;
-        }
-
-        .score-item {
-            margin: 5px 0;
-            font-size: 20px;
+            font-size: 11px;
             font-weight: bold;
-            color: #333;
-        }
-
-        .score-label {
-            color: #666;
-            font-size: 16px;
-        }
-
-        .score-value {
-            color: #FF6B6B;
-            font-size: 24px;
-            margin-left: 10px;
-        }
-
-        #gameOver {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px 60px;
-            border-radius: 30px;
+            color: #2E7D32;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 2px solid #4CAF50;
+            z-index: 15;
+            max-width: 150px;
             text-align: center;
-            z-index: 200;
-            display: none;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            animation: popIn 0.5s ease-out;
+            animation: showName 3s ease-out;
         }
 
-        @keyframes popIn {
-            0% { transform: translate(-50%, -50%) scale(0); }
-            80% { transform: translate(-50%, -50%) scale(1.1); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+        @keyframes showName {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
         }
 
-        #gameOver h2 {
-            color: #FFF;
-            font-size: 36px;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        #gameOver p {
-            color: #FFF;
-            font-size: 24px;
-            margin: 10px 0;
-        }
-
-        .retry-btn {
-            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-top: 20px;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(255,107,107,0.4);
-            transition: all 0.3s;
-        }
-
-        .retry-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(255,107,107,0.5);
-        }
-
-        .retry-btn:active {
-            transform: translateY(0);
+        /* Écrans */
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
         }
 
         #startScreen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 50%, #2BFF88 100%);
-            padding: 40px 60px;
-            border-radius: 30px;
-            text-align: center;
-            z-index: 200;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-
-        #startScreen h1 {
-            font-size: 48px;
-            color: white;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-        }
-
-        #startScreen h2 {
-            font-size: 32px;
-            color: white;
-            margin-bottom: 15px;
-        }
-
-        #startScreen p {
-            font-size: 20px;
-            color: white;
-            margin: 10px 0;
-        }
-
-        .start-btn {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
+        }
+
+        #gameOverScreen {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            display: none;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            background: white;
+            color: #667eea;
             border: none;
-            padding: 20px 50px;
-            font-size: 24px;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
             transition: all 0.3s;
+            -webkit-appearance: none;
         }
 
-        .start-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 6px 20px rgba(102,126,234,0.5);
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
-        /* Clouds */
-        .cloud {
+        .btn-anniv {
+            background: #FF6B6B;
+            color: white;
             position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 20px;
+        }
+
+        #birthdayScreen {
+            background: #667eea;
+            color: white;
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #birthdayTable {
             background: white;
-            border-radius: 100px;
-            opacity: 0.8;
-            z-index: 0;
+            color: #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
         }
 
-        .cloud::before,
-        .cloud::after {
-            content: '';
-            position: absolute;
+        #birthdayTable td {
+            padding: 8px;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Instructions */
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 50;
+        }
+
+        /* Score */
+        #score {
+            position: fixed;
+            top: 20px;
+            left: 20px;
             background: white;
-            border-radius: 100px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            z-index: 50;
         }
 
-        .cloud1 {
-            width: 100px;
-            height: 40px;
-            top: 20%;
-            animation: float 20s infinite;
-        }
-
-        .cloud1::before {
-            width: 50px;
-            height: 50px;
-            top: -25px;
-            left: 10px;
-        }
-
-        .cloud1::after {
-            width: 60px;
-            height: 40px;
-            top: -15px;
-            right: 10px;
-        }
-
-        .cloud2 {
-            width: 80px;
-            height: 35px;
-            top: 40%;
-            animation: float 25s infinite;
-        }
-
-        .cloud2::before {
-            width: 40px;
-            height: 40px;
-            top: -20px;
-            left: 15px;
-        }
-
-        .cloud2::after {
-            width: 50px;
-            height: 35px;
-            top: -10px;
-            right: 15px;
-        }
-
-        @keyframes float {
-            from { transform: translateX(-200px); }
-            to { transform: translateX(calc(100vw + 200px)); }
+        /* Touch zone */
+        .touch-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            z-index: 20;
+            background: transparent;
         }
     </style>
 </head>
 <body>
     <div id="gameCanvas">
-        <!-- Parallax Background -->
-        <div class="parallax-layer layer-sky"></div>
-        <div class="cloud cloud1"></div>
-        <div class="cloud cloud2"></div>
-        <div class="parallax-layer layer-mountains" id="mountains"></div>
-        <div class="parallax-layer layer-hills" id="hills"></div>
-        <div class="parallax-layer layer-ground" id="ground"></div>
-
-        <!-- Score Board -->
-        <div id="scoreBoard">
-            <div class="score-item">
-                <span class="score-label">Score:</span>
-                <span class="score-value" id="currentScore">0</span>
-            </div>
-            <div class="score-item">
-                <span class="score-label">High Score:</span>
-                <span class="score-value" id="highScore">0</span>
-            </div>
-        </div>
-
-        <!-- Alpaca Character -->
+        <!-- Score -->
+        <div id="score">Score: <span id="scoreValue">0</span></div>
+        
+        <!-- Bouton anniversaires -->
+        <button class="btn btn-anniv" onclick="showBirthdays()">📅 Anniv</button>
+        
+        <!-- Alpaca -->
         <div id="ollama">
-            <div class="alpaca-ear left"></div>
-            <div class="alpaca-ear right"></div>
-            <div class="alpaca-head">
-                <div class="alpaca-eye left"></div>
-                <div class="alpaca-eye right"></div>
-                <div class="alpaca-nose"></div>
+            <div class="ollama-head">
+                <div class="ollama-eye left"></div>
+                <div class="ollama-eye right"></div>
             </div>
-            <div class="alpaca-body"></div>
-            <div class="alpaca-legs">
-                <div class="leg"></div>
-                <div class="leg"></div>
-                <div class="leg"></div>
-                <div class="leg"></div>
-            </div>
+            <div class="ollama-body"></div>
         </div>
-
-        <!-- Start Screen -->
-        <div id="startScreen">
-            <h1>🦙 Ollama's Adventure 🦙</h1>
-            <h2>La Famille Hazan</h2>
-            <p>Aide Ollama à sauter au-dessus des obstacles!</p>
-            <p>Les noms de la famille apparaissent quand tu passes un obstacle</p>
-            <p>Appuie sur ESPACE ou clique pour sauter</p>
-            <button class="start-btn" onclick="startGame()">Commencer l'Aventure</button>
-        </div>
-
-        <!-- Game Over Screen -->
-        <div id="gameOver">
-            <h2>Game Over!</h2>
-            <p>Votre Score: <span id="finalScore">0</span></p>
-            <p>Meilleur Score: <span id="bestScore">0</span></p>
-            <button class="retry-btn" onclick="retryGame()">Réessayer!</button>
+        
+        <!-- Sol -->
+        <div class="ground" id="ground"></div>
+        
+        <!-- Zone de touch -->
+        <div class="touch-area" onclick="jump()"></div>
+        
+        <!-- Instructions -->
+        <div class="instructions" id="instructions">
+            Touchez l'écran pour sauter !
         </div>
     </div>
 
+    <!-- Écran d'accueil -->
+    <div id="startScreen" class="screen">
+        <h1>🦙 Ollama Adventure</h1>
+        <h2>Famille Hazan</h2>
+        <p style="text-align: center; margin: 20px;">
+            Aidez Ollama à sauter !<br>
+            Les noms de la famille apparaissent<br>
+            quand vous passez un obstacle
+        </p>
+        <button class="btn" onclick="startGame()">COMMENCER</button>
+    </div>
+
+    <!-- Écran Game Over -->
+    <div id="gameOverScreen" class="screen">
+        <h1>Game Over!</h1>
+        <p style="font-size: 20px; margin: 10px;">Score: <span id="finalScore">0</span></p>
+        <p style="font-size: 20px; margin: 10px;">Meilleur: <span id="bestScore">0</span></p>
+        <button class="btn" onclick="restartGame()">RÉESSAYER</button>
+    </div>
+
+    <!-- Écran Anniversaires -->
+    <div id="birthdayScreen" class="screen">
+        <h1>🎂 Anniversaires du Mois</h1>
+        <div id="birthdayTable">
+            <table style="width: 100%;">
+                <tbody id="birthdayList">
+                    <!-- Anniversaires ici -->
+                </tbody>
+            </table>
+        </div>
+        <button class="btn" onclick="backToGame()">RETOUR AU JEU</button>
+    </div>
+
     <script>
-        // Base de données des membres de la famille
-        const familyMembers = [
-            { nom: "ABITTAN", prenom: "Rachel", hebreu: "Simha", naissance: "10/09/1936", naissanceHeb: "13 Eloul" },
-            { nom: "ABITTAN", prenom: "Meyer", hebreu: "Meir bar Myriam", naissance: "", naissanceHeb: "" },
-            { nom: "HAZAN", prenom: "Esther", hebreu: "Esther Ohayon bat Rahel", naissance: "15/05/1939", naissanceHeb: "24 Iyar" },
-            { nom: "HAZAN", prenom: "Chalom", hebreu: "Chalom BenFréha", naissance: "", naissanceHeb: "" },
-            { nom: "ABITTAN", prenom: "Rachel", hebreu: "", naissance: "10/09/1936", naissanceHeb: "13 Eloul" },
-            { nom: "HAZAN", prenom: "Maurice", hebreu: "Hai Moché", naissance: "07/11/1930", naissanceHeb: "23 Kislev" },
-            { nom: "HAZAN", prenom: "Chalom", hebreu: "", naissance: "26/12/1954", naissanceHeb: "27 Tichri" },
-            { nom: "HAZAN", prenom: "Daniel", hebreu: "", naissance: "07/09/1956", naissanceHeb: "11 Eloul" },
-            { nom: "HAZAN", prenom: "Esther", hebreu: "Titi", naissance: "18/05/1958", naissanceHeb: "30 Iyar" },
-            { nom: "HAZAN", prenom: "Elie", hebreu: "Eliahou", naissance: "11/02/1960", naissanceHeb: "13 Shevat" },
-            { nom: "HAZAN", prenom: "Déborah", hebreu: "", naissance: "25/12/1961", naissanceHeb: "17 Tevet" },
-            { nom: "HAZAN", prenom: "Beloria", hebreu: "", naissance: "09/10/1963", naissanceHeb: "21 Tichri" },
-            { nom: "HAZAN", prenom: "Choulamith", hebreu: "", naissance: "12/12/1964", naissanceHeb: "8 Kislev" },
-            { nom: "HAZAN", prenom: "Albert", hebreu: "Abraham", naissance: "29/04/1966", naissanceHeb: "9 Iyar" },
-            { nom: "HAZAN", prenom: "Michel", hebreu: "Meir", naissance: "13/10/1967", naissanceHeb: "10 Tichri" },
-            { nom: "HAZAN", prenom: "Péninia", hebreu: "", naissance: "13/10/1969", naissanceHeb: "1 Heshvan" },
-            { nom: "HAZAN", prenom: "Salomon", hebreu: "", naissance: "25/04/1971", naissanceHeb: "29 Nissan" },
-            { nom: "HAZAN", prenom: "Yaele", hebreu: "Adassa", naissance: "22/01/1973", naissanceHeb: "19 Shevat" },
-            { nom: "HAZAN", prenom: "Lévana", hebreu: "", naissance: "08/10/1975", naissanceHeb: "3 heshvan" },
-            { nom: "MORALLY", prenom: "Routhy", hebreu: "", naissance: "24/02/1961", naissanceHeb: "" },
-            { nom: "HAZAN", prenom: "Myriam", hebreu: "Avigail", naissance: "10/07/1981", naissanceHeb: "" },
-            { nom: "HAZAN", prenom: "Moché", hebreu: "Asher", naissance: "29/09/1982", naissanceHeb: "" },
-            { nom: "HAZAN", prenom: "Yonathan", hebreu: "", naissance: "27/09/1984", naissanceHeb: "1 Tichri" },
-            { nom: "HAZAN", prenom: "Elisheva", hebreu: "Simha", naissance: "19/07/1990", naissanceHeb: "" },
-            { nom: "HAZAN", prenom: "Yehoudit", hebreu: "Ora", naissance: "", naissanceHeb: "" },
-            { nom: "COHEN SOLAL", prenom: "Sabrina", hebreu: "Tzipora", naissance: "", naissanceHeb: "" },
-            { nom: "HAZAN", prenom: "Charleine", hebreu: "", naissance: "", naissanceHeb: "" },
-            { nom: "HAZAN", prenom: "Celine", hebreu: "Ruth", naissance: "14/02/1991", naissanceHeb: "1er Adar" },
-            { nom: "HAZAN", prenom: "Bryan", hebreu: "Eliel", naissance: "14/05/2002", naissanceHeb: "18 iyar" },
-            { nom: "REBUFFO", prenom: "Marc", hebreu: "Mordéhai", naissance: "", naissanceHeb: "" },
-            { nom: "REBUFFO", prenom: "Anaele", hebreu: "", naissance: "13/01/1987", naissanceHeb: "12 Tevet" },
-            { nom: "REBUFFO", prenom: "Laura", hebreu: "", naissance: "17/11/1993", naissanceHeb: "3 Kislev" },
-            { nom: "BENATTAR", prenom: "Corrine", hebreu: "Myriam", naissance: "21/06/1960", naissanceHeb: "26 Sivan" },
-            { nom: "BENATTAR", prenom: "Hannah", hebreu: "", naissance: "17/05/1982", naissanceHeb: "24 Iyar" },
-            { nom: "BENATTAR", prenom: "Rina", hebreu: "", naissance: "27/02/1984", naissanceHeb: "24 Adar" },
-            { nom: "BENATTAR", prenom: "Simhah", hebreu: "", naissance: "11/08/1990", naissanceHeb: "20 Av" },
-            { nom: "BENATTAR", prenom: "Itshak", hebreu: "", naissance: "13/07/1986", naissanceHeb: "6 Tamouz" },
-            { nom: "MEIMOUN", prenom: "Johana", hebreu: "Simha", naissance: "12/12/1991", naissanceHeb: "7 Tevet" },
-            { nom: "MEIMOUN", prenom: "Shirele", hebreu: "Maissa", naissance: "05/09/1999", naissanceHeb: "24 eloul" },
-            { nom: "FREOUA", prenom: "Orly", hebreu: "", naissance: "16/10/1984", naissanceHeb: "20 Tichri" },
-            { nom: "FREOUA", prenom: "Ilan", hebreu: "Aaron", naissance: "22/08/1986", naissanceHeb: "17 Av" },
-            { nom: "FREOUA", prenom: "Sarah", hebreu: "Sarah Keren", naissance: "21/09/1989", naissanceHeb: "21 eloul" },
-            { nom: "FREOUA", prenom: "Ines", hebreu: "Adassa shirelle", naissance: "19/05/1994", naissanceHeb: "9 Sivan" },
-            { nom: "FREOUA", prenom: "Oren", hebreu: "Moche", naissance: "24/12/1996", naissanceHeb: "14 Tevet" },
-            { nom: "FREOUA", prenom: "Anaya", hebreu: "", naissance: "11/06/2003", naissanceHeb: "11 Sivan" },
-            { nom: "FREOUA", prenom: "Chmouel", hebreu: "", naissance: "05/11/2007", naissanceHeb: "24 Heshvan" },
-            { nom: "LEVY", prenom: "Jeanne", hebreu: "Sarah", naissance: "11/04/1967", naissanceHeb: "2 Nissan" },
-            { nom: "LEVY", prenom: "Nethaniel", hebreu: "", naissance: "02/05/1995", naissanceHeb: "2 Iyar" },
-            { nom: "LEVY", prenom: "Salomé", hebreu: "Zahava", naissance: "30/08/1993", naissanceHeb: "13 Eloul" },
-            { nom: "LEVY", prenom: "Luana", hebreu: "Ilana", naissance: "13/08/1998", naissanceHeb: "21 Av" },
-            { nom: "ASSAYAG", prenom: "Myriam", hebreu: "", naissance: "14/04/1977", naissanceHeb: "26 Nissan" },
-            { nom: "ASSAYAG", prenom: "Hedva", hebreu: "Simha", naissance: "01/08/1994", naissanceHeb: "24 Tamouz" },
-            { nom: "ASSAYAG", prenom: "Ychaï", hebreu: "", naissance: "26/06/1996", naissanceHeb: "10 Tamouz" },
-            { nom: "ASSAYAG", prenom: "Avner", hebreu: "", naissance: "31/01/2000", naissanceHeb: "24 Shevat" },
-            { nom: "AMAR", prenom: "Mickael", hebreu: "", naissance: "04/09/1965", naissanceHeb: "8 Eloul" },
-            { nom: "AMAR", prenom: "Simhah", hebreu: "", naissance: "11/05/1993", naissanceHeb: "20 iyar" },
-            { nom: "AMAR", prenom: "Osnat", hebreu: "", naissance: "11/11/1994", naissanceHeb: "8 Kislev" },
-            { nom: "AMAR", prenom: "Elisheva", hebreu: "", naissance: "17/04/1996", naissanceHeb: "28 nissan" },
-            { nom: "AMAR", prenom: "Yaacov", hebreu: "", naissance: "10/11/1997", naissanceHeb: "10 Heshvan" }
+        // Famille
+        const family = [
+            { nom: "ABITTAN", prenom: "Rachel", naissance: "10/09/1936" },
+            { nom: "HAZAN", prenom: "Esther", naissance: "15/05/1939" },
+            { nom: "HAZAN", prenom: "Maurice", naissance: "07/11/1930" },
+            { nom: "HAZAN", prenom: "Chalom", naissance: "26/12/1954" },
+            { nom: "HAZAN", prenom: "Daniel", naissance: "07/09/1956" },
+            { nom: "HAZAN", prenom: "Esther", naissance: "18/05/1958" },
+            { nom: "HAZAN", prenom: "Elie", naissance: "11/02/1960" },
+            { nom: "HAZAN", prenom: "Déborah", naissance: "25/12/1961" },
+            { nom: "HAZAN", prenom: "Beloria", naissance: "09/10/1963" },
+            { nom: "HAZAN", prenom: "Albert", naissance: "29/04/1966" },
+            { nom: "HAZAN", prenom: "Michel", naissance: "13/10/1967" },
+            { nom: "HAZAN", prenom: "Yaele", naissance: "22/01/1973" },
+            { nom: "HAZAN", prenom: "Lévana", naissance: "08/10/1975" },
+            { nom: "HAZAN", prenom: "Myriam", naissance: "10/07/1981" },
+            { nom: "HAZAN", prenom: "Moché", naissance: "29/09/1982" },
+            { nom: "HAZAN", prenom: "Yonathan", naissance: "27/09/1984" },
+            { nom: "HAZAN", prenom: "Celine", naissance: "14/02/1991" },
+            { nom: "HAZAN", prenom: "Bryan", naissance: "14/05/2002" }
         ];
 
-        // Game Variables
+        // Variables du jeu
         let gameRunning = false;
         let score = 0;
-        let highScore = localStorage.getItem('ollamaHighScore') || 0;
-        let speed = 5;
-        let obstacleInterval;
-        let speedInterval;
-        let scoreInterval;
-        let isJumping = false;
+        let highScore = localStorage.getItem('highScore') || 0;
+        let speed = 3;
         let obstacles = [];
-        let passedObstacles = new Set();
-        let usedIndices = [];
-        let floatingNames = [];
+        let gameInterval;
+        let obstacleInterval;
+        let passedObstacles = [];
 
-        // Audio Context for Sound Effects
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // Initialisation
+        document.getElementById('bestScore').textContent = highScore;
 
-        // Sound Effects
-        function playSound(frequency, duration, type = 'sine', volume = 0.3) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = frequency;
-            oscillator.type = type;
-            
-            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + duration);
-        }
-
-        function playJumpSound() {
-            playSound(400, 0.1, 'square', 0.2);
-            setTimeout(() => playSound(600, 0.1, 'square', 0.2), 50);
-        }
-
-        function playScoreSound() {
-            playSound(523, 0.1, 'sine', 0.2);
-            setTimeout(() => playSound(659, 0.1, 'sine', 0.2), 50);
-            setTimeout(() => playSound(784, 0.1, 'sine', 0.2), 100);
-        }
-
-        function playGameOverSound() {
-            playSound(300, 0.2, 'sawtooth', 0.3);
-            setTimeout(() => playSound(250, 0.2, 'sawtooth', 0.3), 150);
-            setTimeout(() => playSound(200, 0.3, 'sawtooth', 0.3), 300);
-        }
-
-        function playStartSound() {
-            playSound(523, 0.1, 'sine', 0.2);
-            setTimeout(() => playSound(659, 0.1, 'sine', 0.2), 100);
-            setTimeout(() => playSound(784, 0.1, 'sine', 0.2), 200);
-            setTimeout(() => playSound(1047, 0.2, 'sine', 0.2), 300);
-        }
-
-        function playNameSound() {
-            playSound(800, 0.05, 'triangle', 0.2);
-            setTimeout(() => playSound(1000, 0.05, 'triangle', 0.2), 50);
-            setTimeout(() => playSound(1200, 0.1, 'triangle', 0.2), 100);
-        }
-
-        // Update High Score Display
-        document.getElementById('highScore').textContent = highScore;
-
-        // Get random family member
-        function getRandomMember() {
-            if (usedIndices.length >= familyMembers.length) {
-                usedIndices = [];
-            }
-            
-            let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * familyMembers.length);
-            } while (usedIndices.includes(randomIndex));
-            
-            usedIndices.push(randomIndex);
-            return familyMembers[randomIndex];
-        }
-
-        // Show floating name at position
-        function showFloatingName(x, y) {
-            // Remove all existing floating names first to avoid overlap
-            floatingNames.forEach(name => {
-                if (name.parentNode) {
-                    name.parentNode.removeChild(name);
-                }
-            });
-            floatingNames = [];
-
-            const member = getRandomMember();
-            const nameDiv = document.createElement('div');
-            nameDiv.className = 'floating-name';
-            nameDiv.style.left = x + 'px';
-            nameDiv.style.top = y + 'px';
-
-            let content = `<div class="full-name">${member.prenom} ${member.nom}</div>`;
-            if (member.hebreu) {
-                content += `<div class="hebrew-name">${member.hebreu}</div>`;
-            }
-
-            let birthInfo = '';
-            if (member.naissance) {
-                birthInfo = member.naissance;
-            }
-            if (member.naissanceHeb) {
-                birthInfo += (birthInfo ? ' | ' : '') + member.naissanceHeb;
-            }
-            if (birthInfo) {
-                content += `<div class="birth-info">${birthInfo}</div>`;
-            }
-
-            nameDiv.innerHTML = content;
-            document.getElementById('gameCanvas').appendChild(nameDiv);
-            floatingNames.push(nameDiv);
-
-            // Play sound when name appears
-            playNameSound();
-
-            // Remove after 3 seconds
-            setTimeout(() => {
-                if (nameDiv.parentNode) {
-                    nameDiv.parentNode.removeChild(nameDiv);
-                    const index = floatingNames.indexOf(nameDiv);
-                    if (index > -1) {
-                        floatingNames.splice(index, 1);
-                    }
-                }
-            }, 3000);
-        }
-
-        // Jump Function
+        // Saut
         function jump() {
-            if (!isJumping && gameRunning) {
-                isJumping = true;
-                document.body.classList.add('jumping');
-                playJumpSound();
-                
-                setTimeout(() => {
-                    document.body.classList.remove('jumping');
-                    isJumping = false;
-                }, 800);
-            }
-        }
-
-        // Create Obstacle
-        function createObstacle() {
             if (!gameRunning) return;
             
+            const ollama = document.getElementById('ollama');
+            if (ollama.classList.contains('jumping')) return;
+            
+            ollama.classList.add('jumping');
+            setTimeout(() => {
+                ollama.classList.remove('jumping');
+            }, 600);
+        }
+
+        // Créer obstacle
+        function createObstacle() {
             const obstacle = document.createElement('div');
             obstacle.className = 'obstacle';
-            obstacle.dataset.id = Date.now() + Math.random();
-            
-            // Randomly choose between cactus and rock
-            const type = Math.random() > 0.5 ? 'cactus' : 'rock';
-            const innerDiv = document.createElement('div');
-            innerDiv.className = type;
-            obstacle.appendChild(innerDiv);
-            
+            obstacle.style.right = '-50px';
+            obstacle.id = 'obs_' + Date.now();
             document.getElementById('gameCanvas').appendChild(obstacle);
             obstacles.push(obstacle);
         }
 
-        // Move Obstacles
-        function moveObstacles() {
+        // Afficher nom
+        function showName(x, y) {
+            const member = family[Math.floor(Math.random() * family.length)];
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'name-float';
+            nameDiv.style.left = x + 'px';
+            nameDiv.style.top = y + 'px';
+            nameDiv.innerHTML = '<strong>' + member.prenom + ' ' + member.nom + '</strong><br><small>' + member.naissance + '</small>';
+            
+            document.getElementById('gameCanvas').appendChild(nameDiv);
+            
+            setTimeout(() => {
+                if (nameDiv.parentNode) {
+                    nameDiv.parentNode.removeChild(nameDiv);
+                }
+            }, 3000);
+        }
+
+        // Boucle de jeu
+        function gameLoop() {
+            if (!gameRunning) return;
+
             obstacles = obstacles.filter(obstacle => {
-                const currentRight = parseFloat(obstacle.style.right) || -60;
-                const newRight = currentRight + speed;
-                
-                if (newRight > window.innerWidth) {
+                let right = parseFloat(obstacle.style.right) || -50;
+                right += speed;
+                obstacle.style.right = right + 'px';
+
+                // Collision
+                const ollama = document.getElementById('ollama');
+                const ollamaRect = ollama.getBoundingClientRect();
+                const obstacleRect = obstacle.getBoundingClientRect();
+
+                if (ollamaRect.left < obstacleRect.right &&
+                    ollamaRect.right > obstacleRect.left &&
+                    ollamaRect.bottom > obstacleRect.top &&
+                    ollamaRect.top < obstacleRect.bottom) {
+                    gameOver();
+                    return false;
+                }
+
+                // Obstacle passé
+                if (obstacleRect.right < ollamaRect.left && !passedObstacles.includes(obstacle.id)) {
+                    passedObstacles.push(obstacle.id);
+                    score++;
+                    document.getElementById('scoreValue').textContent = score;
+                    showName(Math.random() * 200 + 50, Math.random() * 100 + 50);
+                }
+
+                // Supprimer obstacle hors écran
+                if (right > window.innerWidth + 100) {
                     obstacle.remove();
                     return false;
                 }
-                
-                obstacle.style.right = newRight + 'px';
-                
-                // Check if obstacle is passed (to the left of Ollama)
-                const ollamaRect = document.getElementById('ollama').getBoundingClientRect();
-                const obstacleRect = obstacle.getBoundingClientRect();
-                
-                // Check if obstacle has been passed (obstacle is completely to the left of Ollama)
-                if (obstacleRect.right < ollamaRect.left && !passedObstacles.has(obstacle.dataset.id)) {
-                    passedObstacles.add(obstacle.dataset.id);
-                    
-                    // Show family name at random position above the hills
-                    const randomX = Math.random() * (window.innerWidth - 200) + 100;
-                    const randomY = Math.random() * 150 + 100; // Between 100 and 250px from top
-                    showFloatingName(randomX, randomY);
-                }
-                
-                // Collision Detection
-                if (
-                    ollamaRect.left < obstacleRect.right &&
-                    ollamaRect.right > obstacleRect.left &&
-                    ollamaRect.bottom > obstacleRect.top &&
-                    ollamaRect.top < obstacleRect.bottom
-                ) {
-                    gameOver();
-                }
-                
+
                 return true;
             });
+
+            requestAnimationFrame(gameLoop);
         }
 
-        // Update Score
-        function updateScore() {
-            if (gameRunning) {
-                score++;
-                document.getElementById('currentScore').textContent = score;
-                
-                // Play score sound every 10 points
-                if (score % 10 === 0) {
-                    playScoreSound();
-                }
-            }
-        }
-
-        // Start Game
+        // Démarrer jeu
         function startGame() {
-            playStartSound();
             document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('instructions').style.display = 'none';
+            }, 3000);
+
             gameRunning = true;
             score = 0;
-            speed = 5;
-            passedObstacles.clear();
-            usedIndices = [];
+            speed = 3;
+            obstacles = [];
+            passedObstacles = [];
             
-            // Clear any remaining floating names
-            floatingNames.forEach(name => {
-                if (name.parentNode) {
-                    name.parentNode.removeChild(name);
-                }
-            });
-            floatingNames = [];
-            
-            // Start background scrolling
-            document.getElementById('mountains').classList.add('scrolling');
-            document.getElementById('mountains').style.animationDuration = '20s';
-            document.getElementById('hills').classList.add('scrolling');
-            document.getElementById('hills').style.animationDuration = '10s';
-            document.getElementById('ground').classList.add('scrolling');
-            document.getElementById('ground').style.animationDuration = '5s';
-            
-            // Start creating obstacles
-            obstacleInterval = setInterval(createObstacle, 2000);
-            
-            // Start increasing speed
-            speedInterval = setInterval(() => {
-                if (gameRunning && speed < 15) {
-                    speed += 0.5;
-                    
-                    // Update background scroll speeds
-                    const mountains = document.getElementById('mountains');
-                    const hills = document.getElementById('hills');
-                    const ground = document.getElementById('ground');
-                    
-                    mountains.style.animationDuration = (20 - speed) + 's';
-                    hills.style.animationDuration = (10 - speed/2) + 's';
-                    ground.style.animationDuration = (5 - speed/4) + 's';
-                }
-            }, 3000);
-            
-            // Start score counter
-            scoreInterval = setInterval(updateScore, 100);
-            
-            // Game loop
-            gameLoop();
-        }
+            document.getElementById('scoreValue').textContent = score;
+            document.getElementById('ground').classList.add('moving');
 
-        // Game Loop
-        function gameLoop() {
-            if (gameRunning) {
-                moveObstacles();
-                requestAnimationFrame(gameLoop);
-            }
+            // Créer obstacles
+            obstacleInterval = setInterval(() => {
+                if (gameRunning) createObstacle();
+            }, 2000);
+
+            // Augmenter vitesse
+            setInterval(() => {
+                if (gameRunning && speed < 8) speed += 0.5;
+            }, 5000);
+
+            gameLoop();
         }
 
         // Game Over
         function gameOver() {
             gameRunning = false;
-            playGameOverSound();
-            
             clearInterval(obstacleInterval);
-            clearInterval(speedInterval);
-            clearInterval(scoreInterval);
-            
-            // Stop background scrolling
-            document.getElementById('mountains').classList.remove('scrolling');
-            document.getElementById('hills').classList.remove('scrolling');
-            document.getElementById('ground').classList.remove('scrolling');
-            
-            // Update high score
+            document.getElementById('ground').classList.remove('moving');
+
             if (score > highScore) {
                 highScore = score;
-                localStorage.setItem('ollamaHighScore', highScore);
-                document.getElementById('highScore').textContent = highScore;
+                localStorage.setItem('highScore', highScore);
             }
-            
-            // Show game over screen
+
             document.getElementById('finalScore').textContent = score;
             document.getElementById('bestScore').textContent = highScore;
-            document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('gameOverScreen').style.display = 'flex';
+
+            // Nettoyer obstacles
+            obstacles.forEach(obs => obs.remove());
+            obstacles = [];
         }
 
-        // Retry Game
-        function retryGame() {
-            // Clear obstacles
-            obstacles.forEach(obstacle => obstacle.remove());
-            obstacles = [];
-            
-            // Hide game over screen
-            document.getElementById('gameOver').style.display = 'none';
-            
-            // Reset score display
-            document.getElementById('currentScore').textContent = '0';
-            
-            // Start new game
+        // Recommencer
+        function restartGame() {
+            document.getElementById('gameOverScreen').style.display = 'none';
             startGame();
         }
 
-        // Event Listeners
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
+        // Anniversaires
+        function showBirthdays() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", 
+                               "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+            
+            const birthdays = family.filter(member => {
+                if (!member.naissance) return false;
+                const birthMonth = parseInt(member.naissance.split('/')[1]) - 1;
+                return birthMonth === currentMonth;
+            });
+
+            let html = '<tr><td colspan="2"><h3>' + monthNames[currentMonth] + '</h3></td></tr>';
+            
+            if (birthdays.length === 0) {
+                html += '<tr><td colspan="2" style="text-align: center; padding: 20px;">Aucun anniversaire ce mois-ci</td></tr>';
+            } else {
+                birthdays.forEach(member => {
+                    html += '<tr><td><strong>' + member.prenom + ' ' + member.nom + '</strong></td><td>' + member.naissance + '</td></tr>';
+                });
+            }
+
+            document.getElementById('birthdayList').innerHTML = html;
+            document.getElementById('birthdayScreen').style.display = 'flex';
+            
+            if (gameRunning) {
+                gameRunning = false;
+                clearInterval(obstacleInterval);
+                document.getElementById('ground').classList.remove('moving');
+            }
+        }
+
+        // Retour au jeu
+        function backToGame() {
+            document.getElementById('birthdayScreen').style.display = 'none';
+            
+            if (score > 0) {
+                gameRunning = true;
+                document.getElementById('ground').classList.add('moving');
+                obstacleInterval = setInterval(() => {
+                    if (gameRunning) createObstacle();
+                }, 2000);
+                gameLoop();
+            }
+        }
+
+        // Touch events mobile
+        document.addEventListener('touchstart', function(e) {
+            if (gameRunning && e.target.closest('#gameCanvas')) {
                 e.preventDefault();
                 jump();
             }
         });
 
-        document.getElementById('gameCanvas').addEventListener('click', jump);
-        document.getElementById('gameCanvas').addEventListener('touchstart', (e) => {
+        // Empêcher le zoom
+        document.addEventListener('gesturestart', function(e) {
             e.preventDefault();
-            jump();
+        });
+
+        // Nettoyage au chargement
+        window.addEventListener('load', function() {
+            // Masquer tous les écrans sauf start
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('birthdayScreen').style.display = 'none';
         });
     </script>
 </body>
