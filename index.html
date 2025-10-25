@@ -2,8 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ollama Mobile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Ollama Mobile - Famille Hazan</title>
     <style>
         * {
             margin: 0;
@@ -17,23 +19,26 @@
             overflow: hidden;
             background: linear-gradient(to bottom, #87CEEB, #98D8E8);
             height: 100vh;
+            height: -webkit-fill-available;
             position: relative;
             touch-action: none;
         }
 
         #gameCanvas {
             width: 100%;
-            height: 100%;
+            height: 100vh;
+            height: -webkit-fill-available;
             position: relative;
             overflow: hidden;
             background: linear-gradient(to bottom, #87CEEB, #98D8E8);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .ground {
             position: absolute;
-            bottom: 0;
+            bottom: env(safe-area-inset-bottom);
             width: 200%;
-            height: 60px;
+            height: 50px;
             background: linear-gradient(to top, #8FBC8F, #90EE90);
             border-top: 2px solid #6B8E23;
             z-index: 4;
@@ -51,7 +56,7 @@
         /* Alpaca */
         #ollama {
             position: absolute;
-            bottom: 60px;
+            bottom: calc(env(safe-area-inset-bottom) + 50px);
             left: 60px;
             width: 50px;
             height: 60px;
@@ -98,17 +103,17 @@
         }
 
         @keyframes jump {
-            0%, 100% { bottom: 60px; }
-            50% { bottom: 180px; }
+            0%, 100% { bottom: calc(env(safe-area-inset-bottom) + 50px); }
+            50% { bottom: calc(env(safe-area-inset-bottom) + 180px); }
         }
 
         /* Obstacles */
         .obstacle {
             position: absolute;
-            bottom: 60px;
+            bottom: calc(env(safe-area-inset-bottom) + 50px);
             right: -60px;
-            width: 30px;
-            height: 40px;
+            width: 25px;
+            height: 35px;
             background: #228B22;
             border-radius: 5px 5px 0 0;
             border: 2px solid #006400;
@@ -127,7 +132,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             border: 2px solid #4CAF50;
             z-index: 15;
-            max-width: 150px;
+            max-width: 180px;
             text-align: center;
             animation: showName 3s ease-out;
         }
@@ -145,7 +150,8 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
+            height: 100vh;
+            height: -webkit-fill-available;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -165,8 +171,8 @@
         }
 
         h1 {
-            font-size: 28px;
-            margin-bottom: 20px;
+            font-size: 24px;
+            margin-bottom: 15px;
             text-align: center;
         }
 
@@ -193,11 +199,11 @@
             background: #FF6B6B;
             color: white;
             position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 14px;
-            border-radius: 20px;
+            top: 40px;
+            right: 15px;
+            padding: 8px 15px;
+            font-size: 12px;
+            border-radius: 15px;
         }
 
         #birthdayScreen {
@@ -205,7 +211,10 @@
             color: white;
             display: none;
             padding: 20px;
+            padding-top: calc(20px + env(safe-area-inset-top));
             overflow-y: auto;
+            height: 100vh;
+            height: -webkit-fill-available;
         }
 
         #birthdayTable {
@@ -214,11 +223,13 @@
             border-radius: 10px;
             padding: 15px;
             margin: 20px 0;
+            max-height: 60vh;
+            overflow-y: auto;
         }
 
         #birthdayTable td {
-            padding: 8px;
-            font-size: 14px;
+            padding: 6px 8px;
+            font-size: 12px;
             border-bottom: 1px solid #eee;
         }
 
@@ -229,52 +240,70 @@
         /* Instructions */
         .instructions {
             position: fixed;
-            bottom: 20px;
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.7);
             color: white;
-            padding: 10px 20px;
+            padding: 8px 15px;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 12px;
             z-index: 50;
         }
 
         /* Score */
         #score {
             position: fixed;
-            top: 20px;
-            left: 20px;
+            top: 40px;
+            left: 15px;
             background: white;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 15px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             color: #333;
             z-index: 50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         /* Touch zone */
         .touch-area {
             position: fixed;
-            bottom: 0;
+            bottom: env(safe-area-inset-bottom);
             left: 0;
             width: 100%;
-            height: 100px;
+            height: 60px;
             z-index: 20;
             background: transparent;
+        }
+
+        /* Zone vide en haut */
+        .ui-safe-zone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(to bottom, rgba(135,206,235,0.3), transparent);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        @supports (padding: max(0px)) {
+            .screen {
+                padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+            }
         }
     </style>
 </head>
 <body>
     <div id="gameCanvas">
-        <!-- Score -->
+        <div class="ui-safe-zone"></div>
+        
         <div id="score">Score: <span id="scoreValue">0</span></div>
         
-        <!-- Bouton anniversaires -->
         <button class="btn btn-anniv" onclick="showBirthdays()">📅 Anniv</button>
         
-        <!-- Alpaca -->
         <div id="ollama">
             <div class="ollama-head">
                 <div class="ollama-eye left"></div>
@@ -283,13 +312,10 @@
             <div class="ollama-body"></div>
         </div>
         
-        <!-- Sol -->
         <div class="ground" id="ground"></div>
         
-        <!-- Zone de touch -->
         <div class="touch-area" onclick="jump()"></div>
         
-        <!-- Instructions -->
         <div class="instructions" id="instructions">
             Touchez l'écran pour sauter !
         </div>
@@ -299,9 +325,9 @@
     <div id="startScreen" class="screen">
         <h1>🦙 Ollama Adventure</h1>
         <h2>Famille Hazan</h2>
-        <p style="text-align: center; margin: 20px;">
+        <p style="text-align: center; margin: 15px; font-size: 14px;">
             Aidez Ollama à sauter !<br>
-            Les noms de la famille apparaissent<br>
+            Découvrez les membres de la famille<br>
             quand vous passez un obstacle
         </p>
         <button class="btn" onclick="startGame()">COMMENCER</button>
@@ -310,8 +336,8 @@
     <!-- Écran Game Over -->
     <div id="gameOverScreen" class="screen">
         <h1>Game Over!</h1>
-        <p style="font-size: 20px; margin: 10px;">Score: <span id="finalScore">0</span></p>
-        <p style="font-size: 20px; margin: 10px;">Meilleur: <span id="bestScore">0</span></p>
+        <p style="font-size: 18px; margin: 8px;">Score: <span id="finalScore">0</span></p>
+        <p style="font-size: 18px; margin: 8px;">Meilleur: <span id="bestScore">0</span></p>
         <button class="btn" onclick="restartGame()">RÉESSAYER</button>
     </div>
 
@@ -329,26 +355,140 @@
     </div>
 
     <script>
-        // Famille
-        const family = [
-            { nom: "ABITTAN", prenom: "Rachel", naissance: "10/09/1936" },
-            { nom: "HAZAN", prenom: "Esther", naissance: "15/05/1939" },
-            { nom: "HAZAN", prenom: "Maurice", naissance: "07/11/1930" },
-            { nom: "HAZAN", prenom: "Chalom", naissance: "26/12/1954" },
-            { nom: "HAZAN", prenom: "Daniel", naissance: "07/09/1956" },
-            { nom: "HAZAN", prenom: "Esther", naissance: "18/05/1958" },
-            { nom: "HAZAN", prenom: "Elie", naissance: "11/02/1960" },
-            { nom: "HAZAN", prenom: "Déborah", naissance: "25/12/1961" },
-            { nom: "HAZAN", prenom: "Beloria", naissance: "09/10/1963" },
-            { nom: "HAZAN", prenom: "Albert", naissance: "29/04/1966" },
-            { nom: "HAZAN", prenom: "Michel", naissance: "13/10/1967" },
-            { nom: "HAZAN", prenom: "Yaele", naissance: "22/01/1973" },
-            { nom: "HAZAN", prenom: "Lévana", naissance: "08/10/1975" },
-            { nom: "HAZAN", prenom: "Myriam", naissance: "10/07/1981" },
-            { nom: "HAZAN", prenom: "Moché", naissance: "29/09/1982" },
-            { nom: "HAZAN", prenom: "Yonathan", naissance: "27/09/1984" },
-            { nom: "HAZAN", prenom: "Celine", naissance: "14/02/1991" },
-            { nom: "HAZAN", prenom: "Bryan", naissance: "14/05/2002" }
+        // Données CSV parsées
+        const familyMembers = [
+            { nom: "OHANA", prenom: "David", prenomHeb: "", naissance: "10/07/1981", naissanceHeb: "" },
+            { nom: "OHANA", prenom: "Myriam", prenomHeb: "Avigail", naissance: "10/07/1981", naissanceHeb: "" },
+            { nom: "OHANA", prenom: "Eliahou", prenomHeb: "", naissance: "", naissanceHeb: "Eloul" },
+            { nom: "OHANA", prenom: "Yehouda", prenomHeb: "Chalom", naissance: "", naissanceHeb: "14 Heshvan" },
+            { nom: "OHANA", prenom: "Mickhal", prenomHeb: "", naissance: "décembre", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Routhy", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Chalom", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Moché", prenomHeb: "Acher", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Téhila", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Odélia", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Chalom", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Avichag", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Chilate", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Eliah", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "BOASIS", prenom: "Iohann", prenomHeb: "", naissance: "06/11/1985", naissanceHeb: "22 Heshvan" },
+            { nom: "REBUFFO", prenom: "Anaele", prenomHeb: "", naissance: "13/01/1987", naissanceHeb: "12 Tevet" },
+            { nom: "BOASIS", prenom: "Noam", prenomHeb: "Moché", naissance: "22/03/2019", naissanceHeb: "15 Adar II" },
+            { nom: "BOASIS", prenom: "Shaya", prenomHeb: "Rachel", naissance: "42137", naissanceHeb: "24 Iyar" },
+            { nom: "SABBAH", prenom: "Norman", prenomHeb: "Abraham", naissance: "23/09/1986", naissanceHeb: "19 Eloul" },
+            { nom: "HAZAN", prenom: "Celine", prenomHeb: "Ruth", naissance: "14/02/1991", naissanceHeb: "1er Adar" },
+            { nom: "BENACOUN", prenom: "Maurice", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "BENACOUN", prenom: "Maely", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "BENACOUN", prenom: "Shaely", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "BENACOUN", prenom: "Mendel", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "BENACOUN", prenom: "Elie", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "MEIMOUN", prenom: "Shaely", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "MEIMOUN", prenom: "Noam", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "ZOUARI", prenom: "Laeticia", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Elisheva", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Meir", prenomHeb: "", naissance: "01/07/2015", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Nissim", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Chalom", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "David", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Esther", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Routh", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "AMAR", prenom: "Mickael", prenomHeb: "", naissance: "28/08/1980", naissanceHeb: "16 eloul" },
+            { nom: "AMAR", prenom: "Yonathan", prenomHeb: "", naissance: "30/11/2015", naissanceHeb: "18 kislev" },
+            { nom: "AMAR", prenom: "Aaron", prenomHeb: "", naissance: "05/01/2009", naissanceHeb: "9 Tevet" },
+            { nom: "AMAR", prenom: "Eliahou", prenomHeb: "", naissance: "14/08/2001", naissanceHeb: "21 Tevet" },
+            { nom: "AMAR", prenom: "Naoumie", prenomHeb: "", naissance: "08/08/2004", naissanceHeb: "21 av" },
+            { nom: "AMAR", prenom: "Meir", prenomHeb: "", naissance: "13/05/2019", naissanceHeb: "8 iyar" },
+            { nom: "AMAR", prenom: "Nissim", prenomHeb: "", naissance: "10/01/2013", naissanceHeb: "29 tevet" },
+            { nom: "AMAR", prenom: "Hannah", prenomHeb: "", naissance: "17/05/1982", naissanceHeb: "24 iyar" },
+            { nom: "FREOUA", prenom: "Liv Lydie", prenomHeb: "Beloria naomie", naissance: "15/04/2021", naissanceHeb: "3 Iyar" },
+            { nom: "FREOUA", prenom: "Nina Sylvaine", prenomHeb: "Esther", naissance: "24/03/2018", naissanceHeb: "8 Nissan" },
+            { nom: "FREOUA", prenom: "Alicia", prenomHeb: "Choulamith", naissance: "27/05/2014", naissanceHeb: "24 Adar" },
+            { nom: "FREOUA", prenom: "Alma", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Chalom", prenomHeb: "", naissance: "11/07/2023", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Johana", prenomHeb: "Lea", naissance: "09/05/1989", naissanceHeb: "4 Iyar" },
+            { nom: "HAZAN", prenom: "David", prenomHeb: "", naissance: "09/04/2021", naissanceHeb: "27 nissan" },
+            { nom: "HAZAN", prenom: "Myriam", prenomHeb: "", naissance: "26/11/2017", naissanceHeb: "8 Kislev" },
+            { nom: "HAZAN", prenom: "Merav", prenomHeb: "", naissance: "10/02/2016", naissanceHeb: "1 Adar 1" },
+            { nom: "HAZAN", prenom: "Esther", prenomHeb: "", naissance: "23/10/2014", naissanceHeb: "29 Tichri" },
+            { nom: "HAZAN", prenom: "Eliahou", prenomHeb: "", naissance: "05/11/2019", naissanceHeb: "7 Heshvan" },
+            { nom: "AZERAD", prenom: "Mickael", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "AZERAD", prenom: "Keren", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "BELAICHE", prenom: "Mickael", prenomHeb: "Chalom ezchiel", naissance: "02/07/1989", naissanceHeb: "29 sivan" },
+            { nom: "BELAICHE", prenom: "Avital", prenomHeb: "Avital Nina", naissance: "18/10/2021", naissanceHeb: "12 Heshvan" },
+            { nom: "BELAICHE", prenom: "Batya", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Lea", prenomHeb: "", naissance: "12/09/1988", naissanceHeb: "1 Tichri" },
+            { nom: "HAZAN", prenom: "Eliahou", prenomHeb: "", naissance: "08/11/2012", naissanceHeb: "23 Heshvan" },
+            { nom: "HAZAN", prenom: "David", prenomHeb: "", naissance: "25/10/2017", naissanceHeb: "5 Heshvan" },
+            { nom: "HAZAN", prenom: "Miryam", prenomHeb: "", naissance: "27/09/2011", naissanceHeb: "28 Eloul" },
+            { nom: "FERTOU", prenom: "David Avraham", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "FERTOU", prenom: "Naoumie", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "BOTBOL", prenom: "Chmouel", prenomHeb: "", naissance: "14/12/1986", naissanceHeb: "13 Kislev" },
+            { nom: "BOTBOL", prenom: "Raphael", prenomHeb: "", naissance: "10/11/2010", naissanceHeb: "3 Kislev" },
+            { nom: "BOTBOL", prenom: "Myriam", prenomHeb: "", naissance: "13/09/2012", naissanceHeb: "27 Eloul" },
+            { nom: "BOTBOL", prenom: "Eliahou", prenomHeb: "", naissance: "25/06/2018", naissanceHeb: "12 Tamouz" },
+            { nom: "BOTBOL", prenom: "Néthanel Chalom", prenomHeb: "", naissance: "10/11/2020", naissanceHeb: "23 heshvan" },
+            { nom: "BOTBOL", prenom: "Shayli", prenomHeb: "", naissance: "01/09/2024", naissanceHeb: "28 Av" },
+            { nom: "AZRIA", prenom: "Moché", prenomHeb: "Nissim", naissance: "09/07/2016", naissanceHeb: "3 Tamouz" },
+            { nom: "AZRIA", prenom: "Akiva", prenomHeb: "Hay", naissance: "14/11/2017", naissanceHeb: "25 Heshvan" },
+            { nom: "AZRIA", prenom: "Avigail", prenomHeb: "", naissance: "26/12/2019", naissanceHeb: "29 Kislev" },
+            { nom: "AZRIA", prenom: "Noa", prenomHeb: "", naissance: "17/08/2021", naissanceHeb: "10 Eloul" },
+            { nom: "AZRIA", prenom: "Aurel", prenomHeb: "", naissance: "23/05/1984", naissanceHeb: "21 iyar" },
+            { nom: "FAROUZE", prenom: "Osnat", prenomHeb: "", naissance: "11/11/1994", naissanceHeb: "8 Kislev" },
+            { nom: "FAROUZE", prenom: "David", prenomHeb: "", naissance: "07/08/1995", naissanceHeb: "11 Av" },
+            { nom: "FAROUZE", prenom: "Shirelle", prenomHeb: "", naissance: "29/04/2020", naissanceHeb: "5 Iyar" },
+            { nom: "FAROUZE", prenom: "Eden", prenomHeb: "", naissance: "29/06/2021", naissanceHeb: "19 Tamouz" },
+            { nom: "FAROUZE", prenom: "Noa", prenomHeb: "", naissance: "10/07/2024", naissanceHeb: "4 Av" },
+            { nom: "NAKACHE", prenom: "Yossef", prenomHeb: "", naissance: "16/06/2005", naissanceHeb: "" },
+            { nom: "NAKACHE", prenom: "Myriam", prenomHeb: "", naissance: "24/10/2007", naissanceHeb: "12 Heshvan" },
+            { nom: "NAKACHE", prenom: "Ayala Noa", prenomHeb: "", naissance: "25/09/2006", naissanceHeb: "3 Tichri" },
+            { nom: "NAKACHE", prenom: "Odaya", prenomHeb: "", naissance: "14/01/2012", naissanceHeb: "19 Tevet" },
+            { nom: "NAKACHE", prenom: "Liora", prenomHeb: "", naissance: "05/01/2016", naissanceHeb: "24 Tevet" },
+            { nom: "NAKACHE", prenom: "Moché", prenomHeb: "", naissance: "22/09/2019", naissanceHeb: "22 Eloul" },
+            { nom: "BENCHETRIT", prenom: "Bryan", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "BENCHETRIT", prenom: "Levy", prenomHeb: "Yehia", naissance: "17/10/2024", naissanceHeb: "14 Tichri" },
+            { nom: "AMAR", prenom: "Ytshak", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "AMAR", prenom: "Chalom", prenomHeb: "Yaacov", naissance: "28/10/2024", naissanceHeb: "25 Tichri" },
+            { nom: "COHEN", prenom: "Shimon", prenomHeb: "", naissance: "26/05/2020", naissanceHeb: "29 Iyar" },
+            { nom: "COHEN", prenom: "Anaelle", prenomHeb: "", naissance: "15/03/2023", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Shalva", prenomHeb: "", naissance: "10/12/1999", naissanceHeb: "" },
+            { nom: "LEVY", prenom: "Ethan", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "LEVY", prenom: "Lital", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "OHAYON", prenom: "David", prenomHeb: "", naissance: "03/12/2014", naissanceHeb: "12 Kislev" },
+            { nom: "OHAYON", prenom: "Eyhan", prenomHeb: "", naissance: "16/02/2018", naissanceHeb: "1 adar" },
+            { nom: "OHAYON", prenom: "Eliah Itshak", prenomHeb: "", naissance: "27/01/2022", naissanceHeb: "25 Shevat" },
+            { nom: "OHAYON", prenom: "Almog", prenomHeb: "", naissance: "07/03/1985", naissanceHeb: "14 Adar II" },
+            { nom: "HAZAN", prenom: "Ouriel", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "COHEN", prenom: "Or", prenomHeb: "", naissance: "29/11/2018", naissanceHeb: "" },
+            { nom: "COHEN", prenom: "Aria", prenomHeb: "", naissance: "20/06/2020", naissanceHeb: "28 Sivan" },
+            { nom: "COHEN", prenom: "Gabriel", prenomHeb: "", naissance: "20/09/2023", naissanceHeb: "5 Tichri" },
+            { nom: "HAZAN", prenom: "Tselia", prenomHeb: "", naissance: "02/12/1991", naissanceHeb: "" },
+            { nom: "SANANES", prenom: "Mickael", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "ZAGOURI", prenom: "Moché", prenomHeb: "", naissance: "09/08/1998", naissanceHeb: "8 Sivan" },
+            { nom: "ZAGOURI", prenom: "Mordehai", prenomHeb: "", naissance: "10/07/1996", naissanceHeb: "23 Tamouz" },
+            { nom: "ZAGOURI", prenom: "David", prenomHeb: "", naissance: "30/12/2015", naissanceHeb: "" },
+            { nom: "ZAGOURI", prenom: "Shira", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "ZAGOURI", prenom: "Sarah", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "ZAGOURI", prenom: "Yaacov", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Ychaï", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Auralie", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Aviel", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Yonathan", prenomHeb: "", naissance: "27/09/1984", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Chalom", prenomHeb: "Arel", naissance: "04/06/2007", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Linoé", prenomHeb: "", naissance: "03/12/2009", naissanceHeb: "" },
+            { nom: "SUISSA", prenom: "Oshrate", prenomHeb: "", naissance: "29/07/1981", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Shir", prenomHeb: "Esther", naissance: "17/06/2017", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Liel", prenomHeb: "Moché", naissance: "29/12/2008", naissanceHeb: "" },
+            { nom: "CHETRIT", prenom: "Dvorah", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "yehoudit", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "CHETRIT", prenom: "Mickhael", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "CHETRIT", prenom: "Routh", prenomHeb: "Esther", naissance: "", naissanceHeb: "" },
+            { nom: "CHETRIT", prenom: "Méir", prenomHeb: "Chalom", naissance: "", naissanceHeb: "" },
+            { nom: "CHETRIT", prenom: "Avital", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "CHETRIT", prenom: "Yehouda", prenomHeb: "", naissance: "", naissanceHeb: "" },
+            { nom: "CHITRIT", prenom: "Esther", prenomHeb: "Odaya", naissance: "11/02/1998", naissanceHeb: "16 shevat" },
+            { nom: "HAZAN", prenom: "Eliezer Israel", prenomHeb: "", naissance: "19/01/", naissanceHeb: "" },
+            { nom: "HAZAN", prenom: "Yaffa Haya", prenomHeb: "", naissance: "01/01/2022", naissanceHeb: "29 tevet" },
+            { nom: "HAZAN", prenom: "Myriam", prenomHeb: "", naissance: "12/09/2023", naissanceHeb: "26 eloul" }
         ];
 
         // Variables du jeu
@@ -360,6 +500,7 @@
         let gameInterval;
         let obstacleInterval;
         let passedObstacles = [];
+        let usedIndices = [];
 
         // Initialisation
         document.getElementById('bestScore').textContent = highScore;
@@ -387,17 +528,47 @@
             obstacles.push(obstacle);
         }
 
-        // Afficher nom
-        function showName(x, y) {
-            const member = family[Math.floor(Math.random() * family.length)];
+        // Afficher nom aléatoire
+        function showRandomName(x, y) {
+            // Récupérer un membre aléatoire non utilisé
+            if (usedIndices.length >= familyMembers.length) {
+                usedIndices = [];
+            }
+            
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * familyMembers.length);
+            } while (usedIndices.includes(randomIndex));
+            
+            usedIndices.push(randomIndex);
+            const member = familyMembers[randomIndex];
+
             const nameDiv = document.createElement('div');
             nameDiv.className = 'name-float';
             nameDiv.style.left = x + 'px';
             nameDiv.style.top = y + 'px';
-            nameDiv.innerHTML = '<strong>' + member.prenom + ' ' + member.nom + '</strong><br><small>' + member.naissance + '</small>';
             
+            let content = '<strong>' + member.prenom + ' ' + member.nom + '</strong>';
+            if (member.prenomHeb) {
+                content += '<br><small><em>(' + member.prenomHeb + ')</em></small>';
+            }
+            
+            let birthInfo = '';
+            if (member.naissance && member.naissance !== "") {
+                birthInfo = member.naissance;
+            }
+            if (member.naissanceHeb && member.naissanceHeb !== "") {
+                birthInfo += (birthInfo ? ' | ' : '') + member.naissanceHeb;
+            }
+            
+            if (birthInfo) {
+                content += '<br><small>' + birthInfo + '</small>';
+            }
+            
+            nameDiv.innerHTML = content;
             document.getElementById('gameCanvas').appendChild(nameDiv);
             
+            // Nettoyer après 3 secondes
             setTimeout(() => {
                 if (nameDiv.parentNode) {
                     nameDiv.parentNode.removeChild(nameDiv);
@@ -432,7 +603,11 @@
                     passedObstacles.push(obstacle.id);
                     score++;
                     document.getElementById('scoreValue').textContent = score;
-                    showName(Math.random() * 200 + 50, Math.random() * 100 + 50);
+                    
+                    // Afficher un nom aléatoire
+                    const randomX = Math.random() * (window.innerWidth - 200) + 20;
+                    const randomY = 20;
+                    showRandomName(randomX, randomY);
                 }
 
                 // Supprimer obstacle hors écran
@@ -461,16 +636,15 @@
             speed = 3;
             obstacles = [];
             passedObstacles = [];
+            usedIndices = [];
             
             document.getElementById('scoreValue').textContent = score;
             document.getElementById('ground').classList.add('moving');
 
-            // Créer obstacles
             obstacleInterval = setInterval(() => {
                 if (gameRunning) createObstacle();
             }, 2000);
 
-            // Augmenter vitesse
             setInterval(() => {
                 if (gameRunning && speed < 8) speed += 0.5;
             }, 5000);
@@ -493,7 +667,6 @@
             document.getElementById('bestScore').textContent = highScore;
             document.getElementById('gameOverScreen').style.display = 'flex';
 
-            // Nettoyer obstacles
             obstacles.forEach(obs => obs.remove());
             obstacles = [];
         }
@@ -511,19 +684,31 @@
             const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", 
                                "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
             
-            const birthdays = family.filter(member => {
-                if (!member.naissance) return false;
-                const birthMonth = parseInt(member.naissance.split('/')[1]) - 1;
-                return birthMonth === currentMonth;
+            const birthdays = familyMembers.filter(member => {
+                if (!member.naissance || member.naissance === "") return false;
+                const [day, month, year] = member.naissance.split('/');
+                return parseInt(month) - 1 === currentMonth;
             });
 
-            let html = '<tr><td colspan="2"><h3>' + monthNames[currentMonth] + '</h3></td></tr>';
+            let html = '<tr><td colspan="3"><h3>' + monthNames[currentMonth] + '</h3></td></tr>';
             
             if (birthdays.length === 0) {
-                html += '<tr><td colspan="2" style="text-align: center; padding: 20px;">Aucun anniversaire ce mois-ci</td></tr>';
+                html += '<tr><td colspan="3" style="text-align: center; padding: 20px; font-size: 14px;">Aucun anniversaire ce mois-ci</td></tr>';
             } else {
                 birthdays.forEach(member => {
-                    html += '<tr><td><strong>' + member.prenom + ' ' + member.nom + '</strong></td><td>' + member.naissance + '</td></tr>';
+                    html += '<tr>';
+                    html += '<td><strong>' + member.prenom + ' ' + member.nom + '</strong>';
+                    if (member.prenomHeb) {
+                        html += '<br><small><em>(' + member.prenomHeb + ')</em></small>';
+                    }
+                    html += '</td>';
+                    html += '<td>' + member.naissance + '</td>';
+                    html += '<td style="text-align: center;">';
+                    if (member.naissanceHeb) {
+                        html += '<small>' + member.naissanceHeb + '</small>';
+                    }
+                    html += '</td>';
+                    html += '</tr>';
                 });
             }
 
@@ -551,7 +736,7 @@
             }
         }
 
-        // Touch events mobile
+        // Touch events
         document.addEventListener('touchstart', function(e) {
             if (gameRunning && e.target.closest('#gameCanvas')) {
                 e.preventDefault();
@@ -559,17 +744,22 @@
             }
         });
 
-        // Empêcher le zoom
+        document.addEventListener('click', function(e) {
+            if (gameRunning && e.target.closest('#gameCanvas')) {
+                jump();
+            }
+        });
+
         document.addEventListener('gesturestart', function(e) {
             e.preventDefault();
         });
 
         // Nettoyage au chargement
         window.addEventListener('load', function() {
-            // Masquer tous les écrans sauf start
             document.getElementById('gameOverScreen').style.display = 'none';
             document.getElementById('birthdayScreen').style.display = 'none';
         });
     </script>
 </body>
 </html>
+
