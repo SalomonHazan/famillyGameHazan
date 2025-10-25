@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ollama Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #98D8E8);
+            height: 100vh;
+            position: relative;
+            touch-action: none;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #87CEEB, #98D8E8);
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 60px;
+            background: linear-gradient(to top, #8FBC8F, #90EE90);
+            border-top: 2px solid #6B8E23;
+            z-index: 4;
+        }
+
+        .moving {
+            animation: move 3s linear infinite;
+        }
+
+        @keyframes move {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* Alpaca */
+        #ollama {
+            position: absolute;
+            bottom: 60px;
+            left: 60px;
+            width: 50px;
+            height: 60px;
+            z-index: 10;
+            transition: bottom 0.3s ease-out;
+        }
+
+        .ollama-body {
+            width: 40px;
+            height: 40px;
+            background: #FFE4B5;
+            border-radius: 50%;
+            border: 2px solid #8B7355;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .ollama-head {
+            width: 25px;
+            height: 25px;
+            background: #FFE4B5;
+            border-radius: 50%;
+            border: 2px solid #8B7355;
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .ollama-eye {
+            width: 3px;
+            height: 3px;
+            background: black;
+            border-radius: 50%;
+            position: absolute;
+            top: 8px;
+        }
+
+        .ollama-eye.left { left: 6px; }
+        .ollama-eye.right { right: 6px; }
+
+        .jumping {
+            animation: jump 0.6s ease-out !important;
+        }
+
+        @keyframes jump {
+            0%, 100% { bottom: 60px; }
+            50% { bottom: 180px; }
+        }
+
+        /* Obstacles */
+        .obstacle {
+            position: absolute;
+            bottom: 60px;
+            right: -60px;
+            width: 30px;
+            height: 40px;
+            background: #228B22;
+            border-radius: 5px 5px 0 0;
+            border: 2px solid #006400;
+            z-index: 9;
+        }
+
+        /* Noms flottants */
+        .name-float {
+            position: absolute;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #2E7D32;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 2px solid #4CAF50;
+            z-index: 15;
+            max-width: 150px;
+            text-align: center;
+            animation: showName 3s ease-out;
+        }
+
+        @keyframes showName {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
+        }
+
+        /* Écrans */
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        #startScreen {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        #gameOverScreen {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            display: none;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+            -webkit-appearance: none;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-anniv {
+            background: #FF6B6B;
+            color: white;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 20px;
+        }
+
+        #birthdayScreen {
+            background: #667eea;
+            color: white;
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #birthdayTable {
+            background: white;
+            color: #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        #birthdayTable td {
+            padding: 8px;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Instructions */
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 50;
+        }
+
+        /* Score */
+        #score {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            z-index: 50;
+        }
+
+        /* Touch zone */
+        .touch-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            z-index: 20;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameCanvas">
+        <!-- Score -->
+        <div id="score">Score: <span id="scoreValue">0</span></div>
+        
+        <!-- Bouton anniversaires -->
+        <button class="btn btn-anniv" onclick="showBirthdays()">📅 Anniv</button>
+        
+        <!-- Alpaca -->
+        <div id="ollama">
+            <div class="ollama-head">
+                <div class="ollama-eye left"></div>
+                <div class="ollama-eye right"></div>
+            </div>
+            <div class="ollama-body"></div>
+        </div>
+        
+        <!-- Sol -->
+        <div class="ground" id="ground"></div>
+        
+        <!-- Zone de touch -->
+        <div class="touch-area" onclick="jump()"></div>
+        
+        <!-- Instructions -->
+        <div class="instructions" id="instructions">
+            Touchez l'écran pour sauter !
+        </div>
+    </div>
+
+    <!-- Écran d'accueil -->
+    <div id="startScreen" class="screen">
+        <h1>🦙 Ollama Adventure</h1>
+        <h2>Famille Hazan</h2>
+        <p style="text-align: center; margin: 20px;">
+            Aidez Ollama à sauter !<br>
+            Les noms de la famille apparaissent<br>
+            quand vous passez un obstacle
+        </p>
+        <button class="btn" onclick="startGame()">COMMENCER</button>
+    </div>
+
+    <!-- Écran Game Over -->
+    <div id="gameOverScreen" class="screen">
+        <h1>Game Over!</h1>
+        <p style="font-size: 20px; margin: 10px;">Score: <span id="finalScore">0</span></p>
+        <p style="font-size: 20px; margin: 10px;">Meilleur: <span id="bestScore">0</span></p>
+        <button class="btn" onclick="restartGame()">RÉESSAYER</button>
+    </div>
+
+    <!-- Écran Anniversaires -->
+    <div id="birthdayScreen" class="screen">
+        <h1>🎂 Anniversaires du Mois</h1>
+        <div id="birthdayTable">
+            <table style="width: 100%;">
+                <tbody id="birthdayList">
+                    <!-- Anniversaires ici -->
+                </tbody>
+            </table>
+        </div>
+        <button class="btn" onclick="backToGame()">RETOUR AU JEU</button>
+    </div>
+
+    <script>
+        // Famille
+        const family = [
+            { nom: "ABITTAN", prenom: "Rachel", naissance: "10/09/1936" },
+            { nom: "HAZAN", prenom: "Esther", naissance: "15/05/1939" },
+            { nom: "HAZAN", prenom: "Maurice", naissance: "07/11/1930" },
+            { nom: "HAZAN", prenom: "Chalom", naissance: "26/12/1954" },
+            { nom: "HAZAN", prenom: "Daniel", naissance: "07/09/1956" },
+            { nom: "HAZAN", prenom: "Esther", naissance: "18/05/1958" },
+            { nom: "HAZAN", prenom: "Elie", naissance: "11/02/1960" },
+            { nom: "HAZAN", prenom: "Déborah", naissance: "25/12/1961" },
+            { nom: "HAZAN", prenom: "Beloria", naissance: "09/10/1963" },
+            { nom: "HAZAN", prenom: "Albert", naissance: "29/04/1966" },
+            { nom: "HAZAN", prenom: "Michel", naissance: "13/10/1967" },
+            { nom: "HAZAN", prenom: "Yaele", naissance: "22/01/1973" },
+            { nom: "HAZAN", prenom: "Lévana", naissance: "08/10/1975" },
+            { nom: "HAZAN", prenom: "Myriam", naissance: "10/07/1981" },
+            { nom: "HAZAN", prenom: "Moché", naissance: "29/09/1982" },
+            { nom: "HAZAN", prenom: "Yonathan", naissance: "27/09/1984" },
+            { nom: "HAZAN", prenom: "Celine", naissance: "14/02/1991" },
+            { nom: "HAZAN", prenom: "Bryan", naissance: "14/05/2002" }
+        ];
+
+        // Variables du jeu
+        let gameRunning = false;
+        let score = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
+        let speed = 3;
+        let obstacles = [];
+        let gameInterval;
+        let obstacleInterval;
+        let passedObstacles = [];
+
+        // Initialisation
+        document.getElementById('bestScore').textContent = highScore;
+
+        // Saut
+        function jump() {
+            if (!gameRunning) return;
+            
+            const ollama = document.getElementById('ollama');
+            if (ollama.classList.contains('jumping')) return;
+            
+            ollama.classList.add('jumping');
+            setTimeout(() => {
+                ollama.classList.remove('jumping');
+            }, 600);
+        }
+
+        // Créer obstacle
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            obstacle.style.right = '-50px';
+            obstacle.id = 'obs_' + Date.now();
+            document.getElementById('gameCanvas').appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        // Afficher nom
+        function showName(x, y) {
+            const member = family[Math.floor(Math.random() * family.length)];
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'name-float';
+            nameDiv.style.left = x + 'px';
+            nameDiv.style.top = y + 'px';
+            nameDiv.innerHTML = '<strong>' + member.prenom + ' ' + member.nom + '</strong><br><small>' + member.naissance + '</small>';
+            
+            document.getElementById('gameCanvas').appendChild(nameDiv);
+            
+            setTimeout(() => {
+                if (nameDiv.parentNode) {
+                    nameDiv.parentNode.removeChild(nameDiv);
+                }
+            }, 3000);
+        }
+
+        // Boucle de jeu
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            obstacles = obstacles.filter(obstacle => {
+                let right = parseFloat(obstacle.style.right) || -50;
+                right += speed;
+                obstacle.style.right = right + 'px';
+
+                // Collision
+                const ollama = document.getElementById('ollama');
+                const ollamaRect = ollama.getBoundingClientRect();
+                const obstacleRect = obstacle.getBoundingClientRect();
+
+                if (ollamaRect.left < obstacleRect.right &&
+                    ollamaRect.right > obstacleRect.left &&
+                    ollamaRect.bottom > obstacleRect.top &&
+                    ollamaRect.top < obstacleRect.bottom) {
+                    gameOver();
+                    return false;
+                }
+
+                // Obstacle passé
+                if (obstacleRect.right < ollamaRect.left && !passedObstacles.includes(obstacle.id)) {
+                    passedObstacles.push(obstacle.id);
+                    score++;
+                    document.getElementById('scoreValue').textContent = score;
+                    showName(Math.random() * 200 + 50, Math.random() * 100 + 50);
+                }
+
+                // Supprimer obstacle hors écran
+                if (right > window.innerWidth + 100) {
+                    obstacle.remove();
+                    return false;
+                }
+
+                return true;
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Démarrer jeu
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('instructions').style.display = 'none';
+            }, 3000);
+
+            gameRunning = true;
+            score = 0;
+            speed = 3;
+            obstacles = [];
+            passedObstacles = [];
+            
+            document.getElementById('scoreValue').textContent = score;
+            document.getElementById('ground').classList.add('moving');
+
+            // Créer obstacles
+            obstacleInterval = setInterval(() => {
+                if (gameRunning) createObstacle();
+            }, 2000);
+
+            // Augmenter vitesse
+            setInterval(() => {
+                if (gameRunning && speed < 8) speed += 0.5;
+            }, 5000);
+
+            gameLoop();
+        }
+
+        // Game Over
+        function gameOver() {
+            gameRunning = false;
+            clearInterval(obstacleInterval);
+            document.getElementById('ground').classList.remove('moving');
+
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+            }
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('bestScore').textContent = highScore;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+
+            // Nettoyer obstacles
+            obstacles.forEach(obs => obs.remove());
+            obstacles = [];
+        }
+
+        // Recommencer
+        function restartGame() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            startGame();
+        }
+
+        // Anniversaires
+        function showBirthdays() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", 
+                               "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+            
+            const birthdays = family.filter(member => {
+                if (!member.naissance) return false;
+                const birthMonth = parseInt(member.naissance.split('/')[1]) - 1;
+                return birthMonth === currentMonth;
+            });
+
+            let html = '<tr><td colspan="2"><h3>' + monthNames[currentMonth] + '</h3></td></tr>';
+            
+            if (birthdays.length === 0) {
+                html += '<tr><td colspan="2" style="text-align: center; padding: 20px;">Aucun anniversaire ce mois-ci</td></tr>';
+            } else {
+                birthdays.forEach(member => {
+                    html += '<tr><td><strong>' + member.prenom + ' ' + member.nom + '</strong></td><td>' + member.naissance + '</td></tr>';
+                });
+            }
+
+            document.getElementById('birthdayList').innerHTML = html;
+            document.getElementById('birthdayScreen').style.display = 'flex';
+            
+            if (gameRunning) {
+                gameRunning = false;
+                clearInterval(obstacleInterval);
+                document.getElementById('ground').classList.remove('moving');
+            }
+        }
+
+        // Retour au jeu
+        function backToGame() {
+            document.getElementById('birthdayScreen').style.display = 'none';
+            
+            if (score > 0) {
+                gameRunning = true;
+                document.getElementById('ground').classList.add('moving');
+                obstacleInterval = setInterval(() => {
+                    if (gameRunning) createObstacle();
+                }, 2000);
+                gameLoop();
+            }
+        }
+
+        // Touch events mobile
+        document.addEventListener('touchstart', function(e) {
+            if (gameRunning && e.target.closest('#gameCanvas')) {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        // Empêcher le zoom
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+
+        // Nettoyage au chargement
+        window.addEventListener('load', function() {
+            // Masquer tous les écrans sauf start
+            document.getElementById('gameOverScreen').style.display = 'none';
+            document.getElementById('birthdayScreen').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
